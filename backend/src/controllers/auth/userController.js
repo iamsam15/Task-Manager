@@ -124,3 +124,34 @@ export const logoutUser = await asyncHandler(async (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "User logged out!!" });
 });
+
+// get User
+export const getUser = await asyncHandler(async (req, res) => {
+  //get the user details from the token -----> exclude password
+
+  const user = await User.findById(req.user._id).select("-password");
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404).json({ message: "User not Found" });
+  }
+});
+
+export const updateUser = await asyncHandler(async (req, res) => {
+  //get user details from the token ------> protect middleware
+  const user = await User.findById(req.user._id).select("-password");
+  if (user) {
+    //user properties to update
+    const { name, bio, photo } = req.body;
+    //update user properties
+    user.name = name || user.name;
+    user.bio = bio || user.bio;
+    user.photo = photo || user.photo;
+
+    const updated = await user.save();
+
+    res.status(200).json({ updated });
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
