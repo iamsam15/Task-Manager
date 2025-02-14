@@ -117,3 +117,10 @@ export const loginUser = asyncHandler(async (req, res) => {
     res.status(400).json({ message: "Incorrect email or password" });
   }
 });
+
+// logout user
+
+export const logoutUser = await asyncHandler(async (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "User logged out!!" });
+});
