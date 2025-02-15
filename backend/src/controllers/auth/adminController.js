@@ -15,3 +15,12 @@ export const deleteUser = asyncHandler(async (req, res) => {
     return res.status(500).json({ message: "Cannot delete user" });
   }
 });
+
+// get all users
+export const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}).select("-password");
+  if (!users) {
+    return res.status(404).json({ message: "Users not found" });
+  }
+  res.status(200).json(users);
+});

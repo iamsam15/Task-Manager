@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import User from "../../models/auth/userModel.js";
 import genrateToken from "../../helpers/genrateToken.js";
 import bcrypt from "bcrypt";
+import jwt, { decode } from "jsonwebtoken";
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -153,5 +154,20 @@ export const updateUser = await asyncHandler(async (req, res) => {
     res.status(200).json({ updated });
   } else {
     res.status(404).json({ message: "User not found" });
+  }
+});
+
+// login staus
+export const userLoginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({ message: "Not authorized, please login" });
+  }
+  //verify the token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  if (decoded) {
+    return res.status(200).json(true);
+  } else {
+    return res.status(401).json(false);
   }
 });
