@@ -11,7 +11,7 @@ export const UserContextProvider = ({ children }) => {
 
   const router = useRouter();
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState({});
   const [userState, setUserState] = useState({
     name: "",
     email: "",
@@ -85,6 +85,46 @@ export const UserContextProvider = ({ children }) => {
     }
   };
 
+  //get user logged in status
+  const userLoginStatus = async () => {
+    let loggedIn = false;
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/login-status`, {
+        withCredentials: true,
+      });
+
+      //coerce the string to boolean
+      loggedIn = !!res.data;
+      setLoading(false);
+
+      if (!loggedIn) {
+        router.push("/login");
+      }
+    } catch (error) {
+      console.log("Error getting user login status", error);
+      // toast.error(error.response.data.message);
+    }
+
+    console.log("User logged in Status", loggedIn);
+    return loggedIn;
+  };
+
+  // logout the user
+  const logoutUser = async () => {
+    try {
+      const res = await axios.get(`${serverUrl}/api/v1/logout`, {
+        withCredentials: true, // send cookies to the server
+      });
+
+      toast.success("User logged out successfully");
+
+      router.push("/login");
+    } catch (error) {
+      console.log("Error logging out user", error);
+      toast.error("error.response.data.message");
+    }
+  };
+
   // dynamic from handler
   const handlerUserInput = (name) => (e) => {
     const value = e.target.value;
@@ -95,9 +135,19 @@ export const UserContextProvider = ({ children }) => {
     }));
   };
 
+  // useEffect(() => {
+  //   userLoginStatus();
+  // }, []);
+
   return (
     <UserContext.Provider
-      value={{ registerUser, userState, handlerUserInput, loginUser }}>
+      value={{
+        registerUser,
+        userState,
+        handlerUserInput,
+        loginUser,
+        logoutUser,
+      }}>
       {children}
     </UserContext.Provider>
   );
