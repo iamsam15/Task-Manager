@@ -12,7 +12,7 @@ export default function Home() {
     handlerUserInput,
     updateUser,
     userState,
-    setUserState,
+    emailVerification,
   } = useUserContext();
   const { name, photo, isVerified, bio } = user;
 
@@ -35,7 +35,9 @@ export default function Home() {
             className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 shadow-md"
           />
           {!isVerified && (
-            <button className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200">
+            <button
+              className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-200"
+              onClick={emailVerification}>
               Verify Email
             </button>
           )}

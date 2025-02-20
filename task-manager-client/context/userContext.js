@@ -178,6 +178,65 @@ export const UserContextProvider = ({ children }) => {
       toast.error(error.response.data.message);
     }
   };
+
+  //Email verification
+  const emailVerification = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/verify-email`,
+        {},
+        { withCredentials: true }
+      );
+
+      toast.success("Verification email sent successfully");
+      setLoading(false);
+    } catch (error) {}
+  };
+
+  //verify user/email
+  const verifyUser = async (token) => {
+    setLoading(true);
+    try {
+      const res = axios.post(
+        `${serverUrl}/api/v1/verify-user/${token}`,
+        {},
+        { withCredentials: true }
+      );
+
+      toast.success("User Verified successfully");
+      await getUser();
+      setLoading(false);
+      // redirect user to the home page
+      router.push("/");
+    } catch (error) {
+      console.log("Error Verfiying User: ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
+  // forgot password email \
+  const forgotPasswordEmail = async (email) => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/forgot-password`,
+        {
+          email,
+        },
+        { withCredentials: true }
+      );
+
+      toast.success("Mail sent successfully");
+      setLoading(false);
+    } catch (error) {
+      console.log("error sending mail: ", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    }
+  };
+
   // dynamic from handler
   const handlerUserInput = (name) => (e) => {
     const value = e.target.value;
@@ -210,6 +269,9 @@ export const UserContextProvider = ({ children }) => {
         user,
         updateUser,
         setUserState,
+        emailVerification,
+        verifyUser,
+        forgotPasswordEmail,
       }}>
       {children}
     </UserContext.Provider>
