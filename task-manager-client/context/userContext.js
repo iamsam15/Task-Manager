@@ -17,11 +17,12 @@ export const UserContextProvider = ({ children }) => {
     email: "",
     password: "",
   });
-
+  const [allUsers, setAllUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
   //register user
   const registerUser = async (e) => {
+    setLoading(true);
     e.preventDefault();
     console.log("Sending request with:", { name, email, password });
     console.log("register user function called ");
@@ -51,11 +52,14 @@ export const UserContextProvider = ({ children }) => {
     } catch (error) {
       console.log("Error registering user", error);
       toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Login User
   const loginUser = async (e) => {
+    setLoading(true);
     e.preventDefault();
     try {
       const res = await axios.post(
@@ -70,7 +74,7 @@ export const UserContextProvider = ({ children }) => {
       );
 
       toast.success("User Logged in successfully");
-
+      getUser();
       // clear the from
       setUserState({
         email: "",
@@ -82,11 +86,15 @@ export const UserContextProvider = ({ children }) => {
     } catch (error) {
       console.log("Error Logging in User", error);
       toast.error(error.response.data.message);
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
   //get user logged in status
   const userLoginStatus = async () => {
+    setLoading(true);
     let loggedIn = false;
     try {
       const res = await axios.get(`${serverUrl}/api/v1/login-status`, {
@@ -95,13 +103,15 @@ export const UserContextProvider = ({ children }) => {
 
       //coerce the string to boolean
       loggedIn = !!res.data;
-      setLoading(false);
 
       if (!loggedIn) {
         router.push("/login");
       }
     } catch (error) {
       console.log("Error getting user login status", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
     }
 
     return loggedIn;
@@ -109,17 +119,20 @@ export const UserContextProvider = ({ children }) => {
 
   // logout the user
   const logoutUser = async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`${serverUrl}/api/v1/logout`, {
         withCredentials: true, // send cookies to the server
       });
 
       toast.success("User logged out successfully");
-
+      setUser({});
       router.push("/login");
     } catch (error) {
       console.log("Error logging out user", error);
       toast.error("error.response.data.message");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -137,12 +150,12 @@ export const UserContextProvider = ({ children }) => {
           ...res.data,
         };
       });
-
-      setLoading(false);
     } catch (error) {
       console.log("Error getting user details", error);
       setLoading(false);
       toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -170,12 +183,12 @@ export const UserContextProvider = ({ children }) => {
       }));
       console.log(user);
       toast.success("User updated successfully");
-
-      setLoading(false);
     } catch (error) {
       console.log("Error updating user details", error);
       setLoading(false);
       toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -190,8 +203,12 @@ export const UserContextProvider = ({ children }) => {
       );
 
       toast.success("Verification email sent successfully");
+    } catch (error) {
+      console.log("Error verifiying user: ", error);
+      toast.error(error.response.data.message);
+    } finally {
       setLoading(false);
-    } catch (error) {}
+    }
   };
 
   //verify user/email
@@ -206,17 +223,19 @@ export const UserContextProvider = ({ children }) => {
 
       toast.success("User Verified successfully");
       await getUser();
-      setLoading(false);
+
       // redirect user to the home page
       router.push("/");
     } catch (error) {
       console.log("Error Verfiying User: ", error);
       toast.error(error.response.data.message);
       setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // forgot password email \
+  // forgot password email
   const forgotPasswordEmail = async (email) => {
     setLoading(true);
     try {
@@ -229,14 +248,97 @@ export const UserContextProvider = ({ children }) => {
       );
 
       toast.success("Mail sent successfully");
-      setLoading(false);
     } catch (error) {
       console.log("error sending mail: ", error);
       toast.error(error.response.data.message);
       setLoading(false);
+    } finally {
+      setLoading(false);
     }
   };
 
+  //reset password
+  const resetPassword = async (token, password) => {
+    setLoading(true);
+    console.log(token);
+    try {
+      const res = await axios.post(
+        `${serverUrl}/api/v1/reset-password/${token}`,
+        { password },
+        { withCredentials: true }
+      );
+
+      toast.success("Passowrd Reset Successfully");
+
+      //redirect to the login page
+      router.push("/login");
+    } catch (error) {
+      console.log("Error resetting password: ", error);
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // change password
+  const changePassword = async (currentPassword, newPassword) => {
+    setLoading(true);
+
+    try {
+      const res = await axios.patch(
+        `${serverUrl}/api/v1/change-password`,
+        { currentPassword, newPassword },
+        { withCredentials: true }
+      );
+
+      toast.success("Password Changed successfully");
+    } catch (error) {
+      console.log("Error changing password", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //admin route get all users
+  const getAllUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${serverUrl}/api/v1/admin/users`,
+        {},
+        { withCredentials: true }
+      );
+
+      setAllUsers(res.data);
+
+      setLoading(false);
+    } catch (error) {
+      console.log("Error getting all users", error);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (id) => {
+    setLoading(true);
+    try {
+      const res = await axios.delete(`${serverUrl}/api/v1/admin/users/${id}`, {
+        withCredentials: true,
+      });
+
+      toast.success("User Deleted succesfully");
+      getAllUsers();
+    } catch (error) {
+      console.log("Error deleting user", error);
+      toast.error(error.response.data.message);
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
   // dynamic from handler
   const handlerUserInput = (name) => (e) => {
     const value = e.target.value;
@@ -247,16 +349,26 @@ export const UserContextProvider = ({ children }) => {
     }));
   };
 
-  useEffect(() => {
-    const loginStatusGetUser = async () => {
-      const isloggedIn = await userLoginStatus();
+  const loginStatusGetUser = async () => {
+    const isloggedIn = await userLoginStatus();
 
-      if (isloggedIn) {
-        getUser();
-      }
-    };
+    if (isloggedIn) {
+      getUser();
+    }
+  };
+  useEffect(() => {
     loginStatusGetUser();
   }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await loginStatusGetUser();
+      if (user.role == "admin") {
+        await getAllUsers();
+      }
+    };
+    fetchData();
+  }, [user]);
   return (
     <UserContext.Provider
       value={{
@@ -272,6 +384,10 @@ export const UserContextProvider = ({ children }) => {
         emailVerification,
         verifyUser,
         forgotPasswordEmail,
+        resetPassword,
+        changePassword,
+        allUsers,
+        deleteUser,
       }}>
       {children}
     </UserContext.Provider>
