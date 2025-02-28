@@ -3,6 +3,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import UserProvider from "@/providers/UserProvider";
 import { Toaster } from "react-hot-toast";
+import MiniSidebar from "./Components/MiniSidebar/MiniSidebar";
+import Header from "./Components/Header/Header";
+import MainContentLayout from "@/providers/MainContentLayout";
+import SidebarProvider from "@/providers/SidebarProvider";
+import MainLayout from "@/providers/MainLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="h-full">
       <head>
         <link
           rel="stylesheet"
@@ -37,8 +42,21 @@ export default function RootLayout({
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Toaster position="top-center" />
-        <UserProvider>{children}</UserProvider>
+        <UserProvider>
+          <Toaster position="top-center" />
+          <div className="h-full flex overflow-hidden">
+            <MiniSidebar />
+            <div className="flex-1 flex flex-col">
+              <Header />
+              <div>
+                <MainContentLayout>
+                  <MainLayout>{children}</MainLayout>
+                  <SidebarProvider></SidebarProvider>
+                </MainContentLayout>
+              </div>
+            </div>
+          </div>
+        </UserProvider>
       </body>
     </html>
   );
