@@ -14,7 +14,7 @@ function MiniSidebar() {
   const pathName = usePathname();
 
   const getStrokeColor = (link: string) => {
-    return link === pathName ? "#3aafae" : "#71717a";
+    return link === pathName ? "#0D1B9EFF" : "#71717a";
   };
 
   const navItems = [
@@ -41,7 +41,7 @@ function MiniSidebar() {
   ];
 
   return (
-    <div className="w-20 flex flex-col bg-white shadow-md rounded-lg py-4">
+    <div className="w-20 flex flex-col bg-white shadow-md  py-4">
       <div className="flex items-center justify-center h-20">
         <Image src="/logo.png" width={50} height={50} alt="logo" />
       </div>
