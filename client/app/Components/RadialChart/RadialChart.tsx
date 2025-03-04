@@ -17,6 +17,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useTasks } from "@/context/taskContext";
 
 const chartConfig = {
   desktop: {
@@ -30,11 +31,13 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export function RadialChart() {
-  const tasksTotal = 100;
+  const { tasks, completedTasks, activeTasks } = useTasks();
+
+  const tasksTotal = tasks.length;
   const chartData = [
     {
-      pending: 80,
-      completed: 20,
+      pending: activeTasks.length,
+      completed: completedTasks.length,
     },
   ];
 

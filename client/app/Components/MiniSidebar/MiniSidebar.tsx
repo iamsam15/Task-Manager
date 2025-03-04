@@ -54,7 +54,7 @@ function MiniSidebar() {
                 className="hover:scale-110 transition-transform">
                 {item.icon}
               </Link>
-              <span className="absolute top-1/2 -translate-y-1/2 left-10 text-xs text-white bg-teal-500 px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="u-triangle absolute top-1/2 -translate-y-1/2 left-10 text-xs text-white bg-teal-500 px-2 py-1 rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 {item.title}
               </span>
             </li>

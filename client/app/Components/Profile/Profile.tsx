@@ -1,10 +1,12 @@
 "use client";
+import { useTasks } from "@/context/taskContext";
 import { useUserContext } from "@/context/userContext.js";
 import Image from "next/image";
 import React from "react";
 
 function Profile() {
   const { user } = useUserContext();
+  const { tasks, activeTasks, completedTasks } = useTasks();
   return (
     <div className="m-6">
       <div
@@ -32,28 +34,28 @@ function Profile() {
           <p className="text-sm">Total Tasks</p>
           <p className="flex items-center gap-2 text-4xl font-bold text-gray-900">
             <span className="h-6 w-1 bg-purple-500 rounded-full"></span>
-            10
+            {tasks.length}
           </p>
         </div>
         <div className="text-gray-600 bg-white shadow-md p-4 rounded-xl">
           <p className="text-sm">In Progress</p>
           <p className="flex items-center gap-2 text-4xl font-bold text-gray-900">
             <span className="h-6 w-1 bg-teal-500 rounded-full"></span>
-            11
+            {activeTasks.length}
           </p>
         </div>
         <div className="text-gray-600 bg-white shadow-md p-4 rounded-xl">
-          <p className="text-sm">Open Tasks</p>
+          <p className="text-sm">OverDue Tasks</p>
           <p className="flex items-center gap-2 text-4xl font-bold text-gray-900">
             <span className="h-6 w-1 bg-orange-500 rounded-full"></span>
-            12
+            {tasks.length - activeTasks.length - completedTasks.length}
           </p>
         </div>
         <div className="text-gray-600 bg-white shadow-md p-4 rounded-xl">
           <p className="text-sm">Completed</p>
           <p className="flex items-center gap-2 text-4xl font-bold text-gray-900">
             <span className="h-6 w-1 bg-green-500 rounded-full"></span>
-            13
+            {completedTasks.length}
           </p>
         </div>
       </div>

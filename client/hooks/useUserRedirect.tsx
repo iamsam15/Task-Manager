@@ -1,25 +1,19 @@
 "use client";
-import { useUserContext } from "@/context/userContext";
+import { useUserContext } from "@/context/userContext.js";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 const useRedirect = (redirect: string) => {
-  const { userLoginStatus } = useUserContext();
-
+  const { user } = useUserContext();
   const router = useRouter();
 
   useEffect(() => {
-    const redirectUser = async () => {
-      try {
-        const isLoggedUser = await userLoginStatus();
+    if (!user || !user.email) {
+      router.push(redirect);
+    }
 
-        if (!isLoggedUser) router.push(redirect);
-      } catch (error) {
-        console.log("Error in redirecting User", error);
-      }
-    };
-    redirectUser();
-  }, [redirect, userLoginStatus, router]);
+    // watch for changes in the user, redirect, router
+  }, [user, redirect, router]);
 };
 
 export default useRedirect;

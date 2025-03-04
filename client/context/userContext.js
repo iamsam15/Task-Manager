@@ -362,13 +362,12 @@ export const UserContextProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      await loginStatusGetUser();
       if (user.role == "admin") {
         await getAllUsers();
       }
     };
     fetchData();
-  }, [user]);
+  }, [user?.role]);
   return (
     <UserContext.Provider
       value={{
