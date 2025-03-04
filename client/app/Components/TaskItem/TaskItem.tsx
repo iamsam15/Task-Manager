@@ -3,6 +3,8 @@ import { edit, star, trash } from "@/utils/Icons";
 import { Task } from "@/utils/types";
 import { formatTime } from "@/utils/utilities";
 import React from "react";
+import { motion } from "framer-motion";
+import { item } from "@/utils/animations";
 
 interface TaskItemProps {
   task: Task;
@@ -24,7 +26,9 @@ function TaskItem({ task }: TaskItemProps) {
 
   const { getTask, openModalForEdit, deleteTask, modalMode } = useTasks();
   return (
-    <div className="h-[16rem] px-5 py-4 flex flex-col gap-4 shadow-md bg-white rounded-xl border border-gray-300">
+    <motion.div
+      className="h-[16rem] px-5 py-4 flex flex-col gap-4 shadow-md bg-white rounded-xl border border-gray-300"
+      variants={item}>
       <div>
         <h4 className="font-semibold text-xl text-gray-900">{task.title}</h4>
         <p className="text-gray-700 text-sm mt-1">{task.description}</p>
@@ -54,7 +58,7 @@ function TaskItem({ task }: TaskItemProps) {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
