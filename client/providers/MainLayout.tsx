@@ -1,5 +1,6 @@
 "use client";
 import Modal from "@/app/Components/Modal/Modal";
+import ProfileModal from "@/app/Components/Profile/ProfileModal";
 import { useTasks } from "@/context/taskContext";
 import React from "react";
 
@@ -8,11 +9,12 @@ interface MainLayoutProps {
 }
 
 function MainLayout({ children }: MainLayoutProps) {
-  const { isEditing } = useTasks();
+  const { isEditing, profileModal } = useTasks();
 
   return (
     <div className="main-layout flex-1 bg-[#EDEDED] border-2 border-white overflow-auto">
       {isEditing && <Modal />}
+      {profileModal && <ProfileModal />}
       {children}
     </div>
   );

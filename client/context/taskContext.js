@@ -178,6 +178,7 @@ export const TasksProvider = ({ children }) => {
         completedTasks,
         activeTasks,
         openProfileModal,
+        profileModal,
       }}>
       {children}
     </TasksContext.Provider>

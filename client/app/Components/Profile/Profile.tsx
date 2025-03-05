@@ -6,12 +6,13 @@ import React from "react";
 
 function Profile() {
   const { user } = useUserContext();
-  const { tasks, activeTasks, completedTasks } = useTasks();
+  const { tasks, activeTasks, completedTasks, openProfileModal } = useTasks();
   return (
     <div className="m-6">
       <div
         className="px-4 py-4 flex items-center gap-4 bg-white shadow-md rounded-2xl
-        hover:bg-gray-100 transition duration-300 ease-in-out cursor-pointer border border-gray-300">
+        hover:bg-gray-100 transition duration-300 ease-in-out cursor-pointer border border-gray-300"
+        onClick={openProfileModal}>
         <div>
           <Image
             src={user?.photo}
@@ -45,10 +46,10 @@ function Profile() {
           </p>
         </div>
         <div className="text-gray-600 bg-white shadow-md p-4 rounded-xl">
-          <p className="text-sm">OverDue Tasks</p>
+          <p className="text-sm">Active Tasks</p>
           <p className="flex items-center gap-2 text-4xl font-bold text-gray-900">
             <span className="h-6 w-1 bg-orange-500 rounded-full"></span>
-            {tasks.length - activeTasks.length - completedTasks.length}
+            {activeTasks.length}
           </p>
         </div>
         <div className="text-gray-600 bg-white shadow-md p-4 rounded-xl">

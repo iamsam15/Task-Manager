@@ -60,11 +60,6 @@ function MiniSidebar() {
             </li>
           ))}
         </ul>
-        <div className="mb-6">
-          <button className="w-12 h-12 flex justify-center items-center border-2 border-red-500 p-2 rounded-full hover:bg-red-500 hover:text-white transition-all">
-            <IconDeleteAll strokeColor="#eb4e31" />
-          </button>
-        </div>
       </div>
     </div>
   );
