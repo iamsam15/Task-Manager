@@ -104,7 +104,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       sameSite: "none",
-      secure: false,
+      secure: true,
     });
 
     // send back the user and the token in the response to the client
@@ -129,7 +129,7 @@ export const logoutUser = await asyncHandler(async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     sameSite: "none",
-    secure: false,
+    secure: true,
     path: "/",
   });
   res.status(200).json({ message: "User logged out!!" });
