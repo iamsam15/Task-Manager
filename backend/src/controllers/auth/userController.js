@@ -1,59 +1,60 @@
 import asyncHandler from "express-async-handler";
 import User from "../../models/auth/userModel.js";
-import genrateToken from "../../helpers/genrateToken.js";
+import generateToken from "../../helpers/generateToken.js";
 import bcrypt from "bcrypt";
-import jwt, { decode } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import Token from "../../models/auth/Token.js";
 import crypto from "node:crypto";
 import hashToken from "../../helpers/hashToken.js";
-import sendMail from "../../helpers/sendEmail.js";
+import sendEmail from "../../helpers/sendEmail.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
-  // validation
-
+  //validation
   if (!name || !email || !password) {
-    //400 Bad request
-    res.status(400).json({ message: "All feilds are required" });
+    // 400 Bad Request
+    res.status(400).json({ message: "All fields are required" });
   }
 
+  // check password length
   if (password.length < 6) {
     return res
       .status(400)
-      .json({ message: "Password must be atleast 6 characters" });
+      .json({ message: "Password must be at least 6 characters" });
   }
 
-  // check if the user already exists
+  // check if user already exists
   const userExists = await User.findOne({ email });
+
   if (userExists) {
     // bad request
     return res.status(400).json({ message: "User already exists" });
   }
 
-  // create user
+  // create new user
   const user = await User.create({
     name,
     email,
     password,
   });
 
-  //genrate token with user id
-  const token = genrateToken(user._id);
+  // generate token with user id
+  const token = generateToken(user._id);
 
-  // send back the user and the token as a response to the client
+  // send back the user and token in the response to the client
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    sameSite: "none",
+    sameSite: "none", // cross-site access --> allow all third-party cookies
     secure: false,
   });
 
   if (user) {
     const { _id, name, email, role, photo, bio, isVerified } = user;
 
-    //201 created
+    // 201 Created
     res.status(201).json({
       _id,
       name,
@@ -65,35 +66,38 @@ export const registerUser = asyncHandler(async (req, res) => {
       token,
     });
   } else {
-    res.status(400).json({ message: "invalid user data" });
+    res.status(400).json({ message: "Invalid user data" });
   }
 });
 
-// login user
+// user login
 export const loginUser = asyncHandler(async (req, res) => {
-  // get the email and password from req.body
+  // get email and password from req.body
   const { email, password } = req.body;
 
-  //validation
+  // validation
   if (!email || !password) {
-    return res.status(400).json({ message: "all the fields are required" });
+    // 400 Bad Request
+    return res.status(400).json({ message: "All fields are required" });
   }
 
   // check if user exists
   const userExists = await User.findOne({ email });
 
   if (!userExists) {
-    return res.status(400).json({ message: "User not found, Register now!" });
+    return res.status(404).json({ message: "User not found, sign up!" });
   }
 
-  // check if the password matches the hashed password in the database
+  // check id the password match the hashed password in the database
   const isMatch = await bcrypt.compare(password, userExists.password);
 
   if (!isMatch) {
-    return res.status(400).json({ message: "Incorrect email/password" });
+    // 400 Bad Request
+    return res.status(400).json({ message: "Invalid credentials" });
   }
-  //genrate token with the user id
-  const token = genrateToken(userExists._id);
+
+  // generate token with user id
+  const token = generateToken(userExists._id);
 
   if (userExists && isMatch) {
     const { _id, name, email, role, photo, bio, isVerified } = userExists;
@@ -103,12 +107,12 @@ export const loginUser = asyncHandler(async (req, res) => {
       path: "/",
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: "none",
+      sameSite: "none", // cross-site access --> allow all third-party cookies
       secure: true,
     });
 
-    // send back the user and the token in the response to the client
-    res.status(201).json({
+    // send back the user and token in the response to the client
+    res.status(200).json({
       _id,
       name,
       email,
@@ -119,69 +123,84 @@ export const loginUser = asyncHandler(async (req, res) => {
       token,
     });
   } else {
-    res.status(400).json({ message: "Incorrect email or password" });
+    res.status(400).json({ message: "Invalid email or password" });
   }
 });
 
 // logout user
-
-export const logoutUser = await asyncHandler(async (req, res) => {
+export const logoutUser = asyncHandler(async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     sameSite: "none",
     secure: true,
     path: "/",
   });
-  res.status(200).json({ message: "User logged out!!" });
+
+  res.status(200).json({ message: "User logged out" });
 });
 
-// get User
-export const getUser = await asyncHandler(async (req, res) => {
-  //get the user details from the token -----> exclude password
-
+// get user
+export const getUser = asyncHandler(async (req, res) => {
+  // get user details from the token ----> exclude password
   const user = await User.findById(req.user._id).select("-password");
+
   if (user) {
     res.status(200).json(user);
   } else {
-    res.status(404).json({ message: "User not Found" });
-  }
-});
-
-export const updateUser = await asyncHandler(async (req, res) => {
-  //get user details from the token ------> protect middleware
-  const user = await User.findById(req.user._id).select("-password");
-  if (user) {
-    //user properties to update
-    const { name, bio, photo } = req.body;
-    //update user properties
-    user.name = name || user.name;
-    user.bio = bio || user.bio;
-    user.photo = photo || user.photo;
-
-    const updated = await user.save();
-
-    res.status(200).json({ updated });
-  } else {
+    // 404 Not Found
     res.status(404).json({ message: "User not found" });
   }
 });
 
-// login staus
-export const userLoginStatus = asyncHandler(async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ message: "Not authorized, please login" });
-  }
-  //verify the token
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  if (decoded) {
-    return res.status(200).json(true);
+// update user
+export const updateUser = asyncHandler(async (req, res) => {
+  // get user details from the token ----> protect middleware
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    // user properties to update
+    const { name, bio, photo } = req.body;
+    // update user properties
+    user.name = req.body.name || user.name;
+    user.bio = req.body.bio || user.bio;
+    user.photo = req.body.photo || user.photo;
+
+    const updated = await user.save();
+
+    res.status(200).json({
+      _id: updated._id,
+      name: updated.name,
+      email: updated.email,
+      role: updated.role,
+      photo: updated.photo,
+      bio: updated.bio,
+      isVerified: updated.isVerified,
+    });
   } else {
-    return res.status(401).json(false);
+    // 404 Not Found
+    res.status(404).json({ message: "User not found" });
   }
 });
 
-// email verifcation
+// login status
+export const userLoginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    // 401 Unauthorized
+    res.status(401).json({ message: "Not authorized, please login!" });
+  }
+  // verify the token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  if (decoded) {
+    res.status(200).json(true);
+  } else {
+    res.status(401).json(false);
+  }
+});
+
+// email verification
 export const verifyEmail = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -219,17 +238,17 @@ export const verifyEmail = asyncHandler(async (req, res) => {
   const verificationLink = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
 
   // send email
-  const subject = "Email Verification - Task Manager";
+  const subject = "Email Verification - AuthKit";
   const send_to = user.email;
   const reply_to = "noreply@gmail.com";
   const template = "emailVerification";
   const send_from = process.env.USER_EMAIL;
   const name = user.name;
-  const link = verificationLink;
+  const url = verificationLink;
 
   try {
     // order matters ---> subject, send_to, send_from, reply_to, template, name, url
-    await sendMail(subject, send_to, reply_to, template, send_from, name, link);
+    await sendEmail(subject, send_to, send_from, reply_to, template, name, url);
     return res.json({ message: "Email sent" });
   } catch (error) {
     console.log("Error sending email: ", error);
@@ -242,40 +261,39 @@ export const verifyUser = asyncHandler(async (req, res) => {
   const { verificationToken } = req.params;
 
   if (!verificationToken) {
-    return res.status(400).json({ message: "Invalid Verification token" });
+    return res.status(400).json({ message: "Invalid verification token" });
   }
-
-  // hash the verification token beacuse the token in the database is also hashed
+  // hash the verification token --> because it was hashed before saving
   const hashedToken = hashToken(verificationToken);
 
-  // find the user with the verification toklen
+  // find user with the verification token
   const userToken = await Token.findOne({
     verificationToken: hashedToken,
-    // check if the token is not expired
+    // check if the token has not expired
     expiresAt: { $gt: Date.now() },
   });
-  // console.log(userToken);
 
   if (!userToken) {
     return res
       .status(400)
-      .json({ message: "Invalid or Expired Verification token" });
+      .json({ message: "Invalid or expired verification token" });
   }
 
-  // find user with the user id in the token
+  //find user with the user id in the token
   const user = await User.findById(userToken.userId);
 
   if (user.isVerified) {
+    // 400 Bad Request
     return res.status(400).json({ message: "User is already verified" });
   }
 
   // update user to verified
   user.isVerified = true;
   await user.save();
-  res.status(200).json({ message: "User Verified" });
+  res.status(200).json({ message: "User verified" });
 });
 
-//forgot password
+// forgot password
 export const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -283,23 +301,23 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "Email is required" });
   }
 
-  // check if the user exists
+  // check if user exists
   const user = await User.findOne({ email });
 
   if (!user) {
-    //404 not found
+    // 404 Not Found
     return res.status(404).json({ message: "User not found" });
   }
 
   // see if reset token exists
   let token = await Token.findOne({ userId: user._id });
 
-  // if token exists ----> delete the token
+  // if token exists --> delete the token
   if (token) {
     await token.deleteOne();
   }
 
-  // create a reset token using the user id ----> expires in 1 hour
+  // create a reset token using the user id ---> expires in 1 hour
   const passwordResetToken = crypto.randomBytes(64).toString("hex") + user._id;
 
   // hash the reset token
@@ -307,28 +325,28 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
   await new Token({
     userId: user._id,
-    passwordResettoken: hashedToken,
+    passwordResetToken: hashedToken,
     createdAt: Date.now(),
-    expiresAt: Date.now() + 60 * 60 * 1000,
+    expiresAt: Date.now() + 60 * 60 * 1000, // 1 hour
   }).save();
 
   // reset link
   const resetLink = `${process.env.CLIENT_URL}/reset-password/${passwordResetToken}`;
 
   // send email to user
-  const subject = "Reset Password - Task Manaager";
+  const subject = "Password Reset - AuthKit";
   const send_to = user.email;
-  const reply_to = "noreply@gmail.com";
-  const template = "forgotPassword";
   const send_from = process.env.USER_EMAIL;
+  const reply_to = "noreply@noreply.com";
+  const template = "forgotPassword";
   const name = user.name;
-  const link = resetLink;
+  const url = resetLink;
 
   try {
-    await sendMail(subject, send_to, reply_to, template, send_from, name, link);
-    return res.json({ message: "Email sent" });
+    await sendEmail(subject, send_to, send_from, reply_to, template, name, url);
+    res.json({ message: "Email sent" });
   } catch (error) {
-    console.log("Error sending messaage: ", error);
+    console.log("Error sending email: ", error);
     return res.status(500).json({ message: "Email could not be sent" });
   }
 });
@@ -341,20 +359,25 @@ export const resetPassword = asyncHandler(async (req, res) => {
   if (!password) {
     return res.status(400).json({ message: "Password is required" });
   }
-  //hash the token
+
+  // hash the reset token
   const hashedToken = hashToken(resetPasswordToken);
-  // check if the token exists and is not expired
+
+  // check if token exists and has not expired
   const userToken = await Token.findOne({
-    passwordResettoken: hashedToken,
+    passwordResetToken: hashedToken,
+    // check if the token has not expired
     expiresAt: { $gt: Date.now() },
   });
 
   if (!userToken) {
     return res.status(400).json({ message: "Invalid or expired reset token" });
   }
-  //find user id in the token
+
+  // find user with the user id in the token
   const user = await User.findById(userToken.userId);
-  //update the user password
+
+  // update user password
   user.password = password;
   await user.save();
 
@@ -366,24 +389,25 @@ export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
 
   if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: "All fields are requires" });
+    return res.status(400).json({ message: "All fields are required" });
   }
 
-  // find user by id
+  //find user by id
   const user = await User.findById(req.user._id);
 
-  //comapre current password with the hashed password in the database
+  // compare current password with the hashed password in the database
   const isMatch = await bcrypt.compare(currentPassword, user.password);
+
   if (!isMatch) {
-    return res.status(400).json({ message: "Invalid password" });
+    return res.status(400).json({ message: "Invalid password!" });
   }
 
-  // change password
+  // reset password
   if (isMatch) {
     user.password = newPassword;
     await user.save();
-    return res.status(200).json({ message: "Password changes successfully" });
+    return res.status(200).json({ message: "Password changed successfully" });
   } else {
-    return res.status(400).json({ message: "Password could not be changed" });
+    return res.status(400).json({ message: "Password could not be changed!" });
   }
 });
